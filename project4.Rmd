@@ -2,7 +2,9 @@
 title: "Stat 382 Final Project"
 output: html_notebook
 ---
-Data Cleaning
+#Data Cleaning
+
+####Variable Meaning
 AI = Native American
 AP = Asian
 BH = Black
@@ -10,6 +12,10 @@ HP = Hisanpic
 WH = White
 OT = Other
 UK = race unknown
+DemChange = Democrat's improvement from 2016
+Total = Total votes casted
+
+###Loading Election and Electorate Data
 ```{r}
 library(readxl)
 GAelection = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Georgia.xlsx"))[-160,]
@@ -18,18 +24,43 @@ GAvoter[,-1] = sapply(GAvoter[,-1], function(x) return(round(x/GAvoter$`TOTAL VO
 ga2016 = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/GA2016.xlsx"))
 GA = cbind(GAelection, GAvoter)
 BidenVoteShare = round(GA$`B_Total Votes`/GA$Total, 3)
+TrumpVoteShare = round(GA$`T_Total Votes`/GA$Total, 3)
 GA$BidenVoteShare = BidenVoteShare
+GA$TrumpVoteShare = TrumpVoteShare
 GA$DemChange = BidenVoteShare - ga2016$HRCshare
-data = GA[,c(1,17:27)]
+data = GA[,c(1,17:28)]
 data$Turnout = round(data$Total/data$`TOTAL VOTERS`,3)
 data$voteChange = data$Total/ga2016$Total-1
 turnout2016 = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/gaTurnout2016.xlsx"))
 data$TurnoutChange = data$Turnout-turnout2016$Turnout/100
 ```
-Categorical Variable
-Urban/Rural
+###Add in population density and income
 ```{r}
+pop = read.csv("C:/Users/alber/Downloads/Stat382/Project4/LandArea.csv")[,c(2:4)]
+pop$Population = as.numeric(pop$Population)
+pop$pop_density=pop$Population/pop$Land.Area
+data=merge(pop,data)
+#data=subset(merge(pop,data), select=-c(Population,Land.Area))
+#income = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/incomeED.xlsx"))[,c(-2,-4,-5,-6)]
+#data=merge(data,income)
+```
 
+```{r}
+sort(GA$County)==sort(pop$County)
+```
+
+
+###Create Categorical Variables 
+####Urban/Rural
+####Won by Clinton/Trump in 2016
+```{r}
+data$old_margin = ga2016$HRCshare-ga2016$DJTShare
+data$past_result[data$old_margin>0] = "Dem"
+data$past_result[data$old_margin<0] = "Rep"
+data$past_result = as.factor(data$past_result)
+data$current_result[data$BidenVoteShare-data$TrumpVoteShare>0] = "Dem"
+data$current_result[data$BidenVoteShare-data$TrumpVoteShare<0] = "Rep"
+data$current_result = as.factor(data$current_result)
 ```
 Hypotheses:
 1. More educated counties -> more Democratic
@@ -51,4 +82,10 @@ Change from 2016
 Population Density 
 2016 result by party (categorical)
 Share of 65+ or <30
+
+#Exploratory Analysis
+```{r}
+#boxplot(data$DemChange~data$past_result)
+
+```
 
