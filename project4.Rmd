@@ -5,22 +5,30 @@ output: html_notebook
 #Data Cleaning
 
 ####Variable Meaning
-AI = Native American
-AP = Asian
-BH = Black
-HP = Hisanpic
-WH = White
-OT = Other
-UK = race unknown
+AI = Native American, percentage of registered voters
+AP = Asian, percentage of registered voters
+BH = Black, percentage of registered voters
+HP = Hisanpic, percentage of registered voters
+WH = White, percentage of registered voters
+OT = Other, percentage of registered voters
+UK = race unknown, percentage of registered voters
 DemChange = Democrat's improvement from 2016
-Total = Total votes casted
+Total_votes = Total votes casted
+TOTAL VOTERS = Total number of registered voters
+voteChange = Change in total number of votes casted, compared with 2016
+Education = Percentage of people aged 25 and older who has a bachelor's degree
+pop_density = people per square mile
+new_margin = Democrat's margin of victory in 2020
+old_margin = Democrat's margin of victory in 2016
+current_result = Which party won in 2020
+past_result = which party won in 2016
 
 ###Loading Election and Electorate Data
 ```{r}
 library(readxl)
 GAelection = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Georgia.xlsx"))[-160,]
 GAvoter =  as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Active_Voters_by_Race_Gender_as_of_November_1_2020.xlsx"))[-160,c(-1:-23)]
-GAvoter[,-1] = sapply(GAvoter[,-1], function(x) return(round(x/GAvoter$`TOTAL VOTERS`,4)))
+GAvoter[,-1] = sapply(GAvoter[,-1], function(x) return(round(x*100/GAvoter$`TOTAL VOTERS`,2)))
 ga2016 = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/GA2016.xlsx"))
 GA = cbind(GAelection, GAvoter)
 BidenVoteShare = round(GA$`B_Total Votes`/GA$Total, 3)
@@ -33,6 +41,7 @@ data$Turnout = round(data$Total/data$`TOTAL VOTERS`,3)
 data$voteChange = data$Total/ga2016$Total-1
 turnout2016 = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/gaTurnout2016.xlsx"))
 data$TurnoutChange = data$Turnout-turnout2016$Turnout/100
+names(data)[names(data) == "Total"] = "Total_votes"
 ```
 ###Add in population density and income
 ```{r}
@@ -40,14 +49,12 @@ pop = read.csv("C:/Users/alber/Downloads/Stat382/Project4/LandArea.csv")[,c(2:4)
 pop$Population = as.numeric(pop$Population)
 pop$pop_density=pop$Population/pop$Land.Area
 data=merge(pop,data)
-#data=subset(merge(pop,data), select=-c(Population,Land.Area))
-#income = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/incomeED.xlsx"))[,c(-2,-4,-5,-6)]
-#data=merge(data,income)
+data=subset(merge(pop,data), select=-c(Population,Land.Area))
+income = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/incomeED.xlsx"))[,c(-2,-4,-5,-6)]
+data=merge(data,income)
 ```
 
-```{r}
-sort(GA$County)==sort(pop$County)
-```
+
 
 
 ###Create Categorical Variables 
@@ -55,11 +62,13 @@ sort(GA$County)==sort(pop$County)
 ####Won by Clinton/Trump in 2016
 ```{r}
 data$old_margin = ga2016$HRCshare-ga2016$DJTShare
+data$new_margin = data$BidenVoteShare-data$TrumpVoteShare
 data$past_result[data$old_margin>0] = "Dem"
 data$past_result[data$old_margin<0] = "Rep"
 data$past_result = as.factor(data$past_result)
-data$current_result[data$BidenVoteShare-data$TrumpVoteShare>0] = "Dem"
-data$current_result[data$BidenVoteShare-data$TrumpVoteShare<0] = "Rep"
+data$current_result[data$new_margin>0] = "Dem"
+data$current_result[data$new_margin<0] = "Rep"
+data$past_result = as.factor(data$current_result)
 data$current_result = as.factor(data$current_result)
 ```
 Hypotheses:
