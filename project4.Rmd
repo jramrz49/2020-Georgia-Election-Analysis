@@ -22,7 +22,8 @@ new_margin = Democrat's margin of victory in 2020
 old_margin = Democrat's margin of victory in 2016
 current_result = Which party won in 2020
 past_result = which party won in 2016
-
+senior = percentage of registered voter who are over 65 years old
+youth = percentage of registered voter who are under 30 years old
 ###Loading Election and Electorate Data
 ```{r}
 library(readxl)
@@ -52,6 +53,12 @@ data=merge(pop,data)
 data=subset(merge(pop,data), select=-c(Population,Land.Area))
 income = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/incomeED.xlsx"))[,c(-2,-4,-5,-6)]
 data=merge(data,income)
+```
+###Add in percentage of seniors and youth
+```{r}
+age = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Active_Voters_by_Race_Gender_and_Age_as_of_November_1_2020.xlsx"))[c(seq(1,1753,by=11)),c(-1:-25)][-160,]
+data = cbind(data,age[,c(-1)])
+#colnames(age) = age[1,]
 ```
 
 
