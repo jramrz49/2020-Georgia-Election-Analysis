@@ -2,9 +2,14 @@
 title: "Stat 382 Final Project"
 output: html_notebook
 ---
-
-
-Data Cleaning 
+Data Cleaning
+AI = Native American
+AP = Asian
+BH = Black
+HP = Hisanpic
+WH = White
+OT = Other
+UK = race unknown
 ```{r}
 library(readxl)
 GAelection = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Georgia.xlsx"))[-160,]
@@ -21,3 +26,17 @@ data$voteChange = data$Total/ga2016$Total-1
 turnout2016 = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/gaTurnout2016.xlsx"))
 data$TurnoutChange = data$Turnout-turnout2016$Turnout/100
 ```
+Categorical Variable
+Urban/Rural
+```{r}
+
+```
+Variables:
+*Education (quantitative)
+Income (quantitative)
+Urban/Suburban/Rural (categorical)
+Racial breakdown
+Turnout
+Change from 2016
+Population Density
+2016 result by party (categorical)
