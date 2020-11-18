@@ -1,0 +1,23 @@
+---
+title: "Stat 382 Final Project"
+output: html_notebook
+---
+
+
+Data Cleaning 
+```{r}
+library(readxl)
+GAelection = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Georgia.xlsx"))[-160,]
+GAvoter =  as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Active_Voters_by_Race_Gender_as_of_November_1_2020.xlsx"))[-160,c(-1:-23)]
+GAvoter[,-1] = sapply(GAvoter[,-1], function(x) return(round(x/GAvoter$`TOTAL VOTERS`,4)))
+ga2016 = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/GA2016.xlsx"))
+GA = cbind(GAelection, GAvoter)
+BidenVoteShare = round(GA$`B_Total Votes`/GA$Total, 3)
+GA$BidenVoteShare = BidenVoteShare
+GA$DemChange = BidenVoteShare - ga2016$HRCshare
+data = GA[,c(1,17:27)]
+data$Turnout = round(data$Total/data$`TOTAL VOTERS`,3)
+data$voteChange = data$Total/ga2016$Total-1
+turnout2016 = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/gaTurnout2016.xlsx"))
+data$TurnoutChange = data$Turnout-turnout2016$Turnout/100
+```
