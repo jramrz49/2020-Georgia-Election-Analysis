@@ -49,7 +49,7 @@ names(data)[names(data) == "Total"] = "Total_votes"
 pop = read.csv("C:/Users/alber/Downloads/Stat382/Project4/LandArea.csv")[,c(2:4)]
 pop$Population = as.numeric(pop$Population)
 pop$pop_density=pop$Population/pop$Land.Area
-data=merge(pop,data)
+data=merge(data,pop)
 data=subset(merge(pop,data), select=-c(Population,Land.Area))
 income = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/incomeED.xlsx"))[,c(-2,-4,-5,-6)]
 data=merge(data,income)
@@ -70,6 +70,7 @@ data = cbind(data,age[,c(-1)])
 ```{r}
 data$old_margin = ga2016$HRCshare-ga2016$DJTShare
 data$new_margin = data$BidenVoteShare-data$TrumpVoteShare
+data$margin_change = data$new_margin-data$old_margin
 data$past_result[data$old_margin>0] = "Dem"
 data$past_result[data$old_margin<0] = "Rep"
 data$past_result = as.factor(data$past_result)
@@ -77,7 +78,21 @@ data$current_result[data$new_margin>0] = "Dem"
 data$current_result[data$new_margin<0] = "Rep"
 data$past_result = as.factor(data$current_result)
 data$current_result = as.factor(data$current_result)
+urbanicity = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Sub Urb Rural.xlsx"))
+data$urbanicity = as.factor(urbanicity$`Sub/Urb/Rural`)
 ```
+Save Cleaned Data
+```{r}
+library(writexl)
+write_xlsx(data,"C:/Users/alber/Downloads/Stat382/Project4/cleaned_data.xlsx")
+```
+
+#Load cleaned data
+```{r}
+input = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/cleaned_data.xlsx"))
+```
+
+
 Hypotheses:
 1. More educated counties -> more Democratic
 2. More educated counties -> shifted more Democratic in the past 4 years
