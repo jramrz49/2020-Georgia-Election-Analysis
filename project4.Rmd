@@ -24,6 +24,7 @@ current_result = Which party won in 2020
 past_result = which party won in 2016
 senior = percentage of registered voter who are over 65 years old
 youth = percentage of registered voter who are under 30 years old
+
 ###Loading Election and Electorate Data
 ```{r}
 library(readxl)
@@ -79,7 +80,7 @@ data$current_result[data$new_margin<0] = "Rep"
 data$past_result = as.factor(data$current_result)
 data$current_result = as.factor(data$current_result)
 urbanicity = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Sub Urb Rural.xlsx"))
-data$urbanicity = as.factor(urbanicity$`Sub/Urb/Rural`)
+data$urbanicity = urbanicity$`Sub/Urb/Rural`
 ```
 Save Cleaned Data
 ```{r}
@@ -116,7 +117,13 @@ Share of 65+ or <30
 
 #Exploratory Analysis
 ```{r}
-#boxplot(data$DemChange~data$past_result)
-
+boxplot(input$DemChange~input$urbanicity)
+boxplot(input$new_margin~input$urbanicity)
+test <- aov(BidenVoteShare~urbanicity, data = input)
+summary(test)
+TukeyHSD(test)
+```
+```{r}
+test = data[,c(1,2,12,27)]
 ```
 
