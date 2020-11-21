@@ -1,0 +1,61 @@
+---
+title: "Albert Yen Analysis"
+output: html_notebook
+---
+
+
+Loading Libraries and Data
+```{r}
+library(readxl)
+library(plotrix)
+input = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Cleaned_Data.xlsx"))
+input[,c(24:27)] = lapply(input[,c(24:27)],as.factor)
+```
+
+#Exploratory Analysis
+
+###Vote Share by urbanicity and Atlanta
+```{r}
+Total = tapply(input$Total_votes, input$urbanicity,sum)
+B_vote = tapply(input$Total_votes*input$BidenVoteShare/100, input$urbanicity,sum)
+#urbanicity = c("Rural","Suburban", "Urban")
+voters = tapply(input$`TOTAL VOTERS`, input$urbanicity,sum)
+par(mfrow = c(1,2))
+
+barplot(B_vote/Total, col="light blue", main = "Biden's Vote Share",ylim=c(0,0.8))
+barplot(voters/sum(voters), col="light blue", main = "Share of Registered Voters", ylim=c(0,0.5))
+
+B_atlanta_votes = tapply(input$Total_votes*input$BidenVoteShare/100, input$in_atlanta_metro,sum)
+atlanta_voters = tapply(input$`TOTAL VOTERS`, input$in_atlanta_metro,sum)
+atlanta_voted = tapply(input$Total_votes, input$in_atlanta_metro,sum)
+
+barplot(B_atlanta_votes/atlanta_voted, col="light blue", main = "Biden's Vote Share", names.arg =c( "Outside of Atlanta", "Atlanta"), ylim=c(0,0.7))
+barplot(atlanta_voted/sum(atlanta_voted), col="light blue", names.arg =c("Outside of Atlanta", "Atlanta"), main = "Share of Registered Voters", ylim=c(0,0.6))
+```
+###Margin Increases by Urbanicity and Atlanta Metro
+```{r}
+votes2016 = tapply(input$Total_votes*(100-input$voteChange)/100, input$urbanicity,sum)
+new_margin = tapply(input$new_margin*input$Total_votes/100, input$urbanicity, sum)/Total
+old_margin = tapply(input$old_margin*input$Total_votes*(100-input$voteChange)/100/100, input$urbanicity, sum)/votes2016
+par(mfrow = c(1,2))
+barplot(new_margin-old_margin,ylim=c(-0.05,0.1), main="Change in Margin of Victory", col="light blue")
+
+atlanta_votes2016 = tapply(input$Total_votes*(100-input$voteChange)/100, input$in_atlanta_metro,sum)
+atlanta_new_margin = tapply(input$new_margin*input$Total_votes/100, input$in_atlanta_metro, sum)/atlanta_voted
+atlanta_old_margin = tapply(input$old_margin*input$Total_votes*(100-input$voteChange)/100/100, input$in_atlanta_metro, sum)/atlanta_votes2016
+barplot(atlanta_new_margin-atlanta_old_margin,ylim=c(0,0.1), main="Change in Margin of Victory", col="light blue", names.arg =c("Outside of Atlanta", "Atlanta"))
+```
+
+
+###Turnout by Urbanicity and Atlanta Metro
+```{r}
+par(mfrow = c(1,2))
+turnout = sum(Total)/sum(voters)
+barplot(Total/voters, col="light blue", main = "Turnout",
+        width = c(0.1,0.1,0.1))
+barplot(atlanta_voted/atlanta_voters,main = "Turnout", col="light blue", ylim=c(0,0.7), names.arg =c("Outside of Atlanta", "Atlanta"))
+```
+```{r}
+
+```
+
