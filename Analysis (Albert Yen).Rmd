@@ -37,6 +37,7 @@ barplot(atlanta_voted/sum(atlanta_voted), col="light blue", names.arg =c("Outsid
 votes2016 = tapply(input$Total_votes*(100-input$voteChange)/100, input$urbanicity,sum)
 new_margin = tapply(input$new_margin*input$Total_votes/100, input$urbanicity, sum)/Total
 old_margin = tapply(input$old_margin*input$Total_votes*(100-input$voteChange)/100/100, input$urbanicity, sum)/votes2016
+
 par(mfrow = c(1,2))
 barplot(new_margin-old_margin,ylim=c(-0.05,0.1), main="Change in Margin of Victory", col="light blue")
 
@@ -45,17 +46,68 @@ atlanta_new_margin = tapply(input$new_margin*input$Total_votes/100, input$in_atl
 atlanta_old_margin = tapply(input$old_margin*input$Total_votes*(100-input$voteChange)/100/100, input$in_atlanta_metro, sum)/atlanta_votes2016
 barplot(atlanta_new_margin-atlanta_old_margin,ylim=c(0,0.1), main="Change in Margin of Victory", col="light blue", names.arg =c("Outside of Atlanta", "Atlanta"))
 ```
-
-
-###Turnout by Urbanicity and Atlanta Metro
+###Democrat's margin increase by urbanicity, Atlanta, and 2016 results
 ```{r}
-par(mfrow = c(1,2))
+winner2016_2016voted = tapply(input$Total_votes*(100-input$voteChange)/100, input$past_result,sum)
+winner2016_voted = tapply(input$Total_votes, input$past_result,sum)
+winner2016_voter = tapply(input$`TOTAL VOTERS`, input$past_result,sum)
+winner2016_new_margin = tapply(input$new_margin*input$Total_votes/100, input$past_result, sum)/winner2016_voted
+winner2016_old_margin = tapply(input$old_margin*input$Total_votes*(100-input$voteChange)/100/100, input$past_result, sum)/winner2016_2016voted
+
+par(mfrow = c(2,2))
+barplot(new_margin-old_margin,ylim=c(-0.05,0.1), main="Change in Margin of Victory", col="light blue")
+barplot(atlanta_new_margin-atlanta_old_margin,ylim=c(0,0.1), main="Change in Margin of Victory", col="light blue", names.arg =c("Outside of Atlanta", "Atlanta"))
+barplot(winner2016_new_margin-winner2016_old_margin,ylim=c(0,0.1), main="Change in Margin of Victory", col="light blue", names.arg = c("Clinton Counties", "Trump Counties"))
+```
+
+
+###Turnout by by urbanicity, Atlanta, and 2016 results
+```{r}
+par(mfrow = c(2,2))
 turnout = sum(Total)/sum(voters)
 barplot(Total/voters, col="light blue", main = "Turnout",
         width = c(0.1,0.1,0.1))
 barplot(atlanta_voted/atlanta_voters,main = "Turnout", col="light blue", ylim=c(0,0.7), names.arg =c("Outside of Atlanta", "Atlanta"))
+barplot(winner2016_voted/winner2016_voter,main = "Turnout", col="light blue", ylim=c(0,0.7), names.arg =c("Clinton Counties", "Trump Counties"))
 ```
+###Voter turnout Increases by urbanicity, Atlanta, and 2016 results
 ```{r}
+winner2016_2016total_voters = tapply(input$Total_votes*(100-input$voteChange)/100/(input$Turnout-input$TurnoutChange)*100, input$past_result,sum)
+
+atlanta_2016total_voters = tapply(input$Total_votes*(100-input$voteChange)/100/(input$Turnout-input$TurnoutChange)*100, input$in_atlanta_metro,sum)
+
+total_voters2016 = tapply(input$Total_votes*(100-input$voteChange)/100/(input$Turnout-input$TurnoutChange)*100, input$urbanicity,sum)
+
+winner2016_2016turnout = winner2016_2016voted/winner2016_2016total_voters 
+winner2016_turnout = winner2016_voted/winner2016_voter
+
+turnout2016 = votes2016/total_voters2016
+increase = Total/voters-turnout2016
+
+atlanta_turnout2016 = atlanta_votes2016/atlanta_2016total_voters
+atlanta_turnout_increase = atlanta_voted/atlanta_voters - atlanta_turnout2016
+
+par(mfrow = c(2,2))
+barplot(increase,main = "Turnout Increase", col="light blue", ylim=c(0,0.08))
+
+barplot(winner2016_turnout-winner2016_2016turnout,main = "Turnout Increase", col="light blue", ylim=c(0,0.08), names.arg =c("Clinton Counties", "Trump Counties"))
+
+barplot(atlanta_turnout_increase,main = "Turnout Increase", col="light blue", ylim=c(0,0.08), names.arg =c("Outside of Atlanta", "Atlanta"))
+```
+###Change in total number of votes cast by urbanicity, Atlanta, and 2016 results
+```{r}
+input$voted2016 = round(input$Total_votes*(100-input$voteChange)/100)
+input$raw_vote_increase = input$Total_votes-input$voted2016
+
+par(mfrow = c(2,2))
+
+barplot(tapply(input$raw_vote_increase, input$urbanicity, sum)/as.vector(tapply(input$voted2016,input$urbanicity,sum)), col="light blue", main="Votes Cast Increase", ylim=c(0,.35))
+
+barplot(tapply(input$raw_vote_increase, input$in_atlanta_metro, sum)/as.vector(tapply(input$voted2016,input$in_atlanta_metro,sum)), col="light blue", main="Votes Cast Increase", ylim=c(0,.35),names.arg =c("Outside of Atlanta", "Atlanta") )
+
+barplot(tapply(input$raw_vote_increase, input$past_result, sum)/as.vector(tapply(input$voted2016,input$past_result,sum)), col="light blue", main="Votes Cast Increase", ylim=c(0,.35), names.arg =c("Clinton Counties", "Trump Counties") )
+
 
 ```
+
 
