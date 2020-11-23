@@ -1,6 +1,8 @@
 ---
 title: "Albert Yen Analysis"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 
@@ -127,16 +129,13 @@ map_and_data = inner_join(mymap,input)
 ###By Margin
 ```{r}
 map = ggplot(map_and_data)
-map+geom_sf(aes(fill=new_margin))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="New Margin" )+
+m=map+geom_sf(aes(fill=new_margin))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="New Margin" )+
    labs(title = "Democrat's Margin by County, 2020") +theme(title =element_text(size=18, face='bold'))
-
-
-```
-###Margin Change
-```{r}
-map+geom_sf(aes(fill=margin_change))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="New Margin" )+
+change=map+geom_sf(aes(fill=margin_change))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="New Margin" )+
    labs(title = "Democrat's Margin Change, 2016-2020") +theme(title =element_text(size=18, face='bold'))
+grid.arrange(m,change, ncol=2)
 ```
+
 ###Share of Senior Voters
 ```{r}
 o=map+geom_sf(aes(fill=senior))+scale_fill_gradient(low= 'white',high='#FF0000', space = "Lab", name="Percentage")+
@@ -159,4 +158,5 @@ a = map+geom_sf(aes(fill=AP))+scale_fill_gradient(low= 'white',high='orange', sp
 grid.arrange(w, b, a, h, ncol=2, nrow=2)
 
 ```
+
 
