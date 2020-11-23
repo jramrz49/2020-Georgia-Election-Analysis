@@ -8,10 +8,10 @@ library(readxl)
 options(scipen = 999)
 ?options
 
-setwd('V:/Stat382') # Use your own
+setwd('C:/Users/alber/Downloads/Stat382/Project4') # Use your own
 
 data <- read_excel('Cleaned_Data.xlsx')
-mymap <- st_read("Counties_Georgia.shp", stringsAsFactors=F)
+mymap <- st_read("Georgia_Counties.shp", stringsAsFactors=F)
 str(mymap)
 
 
