@@ -273,4 +273,28 @@ plot(test$pop_density,test$margin_change, main = "Population Density vs. Margin 
        "Population Density per Square Mile", ylab = "Margin Shift")
 abline(test_pop)
 ```
+Analysis of Vote Breakdowns
+```{r}
+georgia = as.data.frame(read_excel('C:/Users/alber/Downloads/Stat382/Project4/Georgia.xlsx'))[-160,]
+Biden_breakdown = c(sum(georgia$`B_Election Day Votes`),sum(georgia$`B_Advanced Voting Votes`),sum(georgia$`B_Absentee by Mail Votes`),sum(georgia$`B_Provisional Votes`))
+Trump_breakdown = c(sum(georgia$`T_Election Day Votes`),sum(georgia$`T_Advanced Voting Votes`),sum(georgia$`T_Absentee by Mail Votes`),sum(georgia$`T_Provisional Votes`))
+breakdown = cbind(Biden_breakdown,Trump_breakdown)
+rownames(breakdown) = c("Election Day", "Early Vote", "Mail", "Provisional")
+colnames(breakdown) = c("Biden", "Trump")
+chisq.test(breakdown)
+
+georgia$urbanicity = input$urbanicity
+georgia$total_ElectionDay = rowSums(georgia[,c(2,7,12)])
+georgia$total_Mail = rowSums(georgia[,c(3,8,13)])
+georgia$total_Early = rowSums(georgia[,c(4,9,14)])
+georgia$total_provisional = rowSums(georgia[,c(5,10,15)])
+election = tapply(georgia$total_ElectionDay, georgia$urbanicity, sum)
+mail= tapply(georgia$total_Mail, georgia$urbanicity, sum)
+early = tapply(georgia$total_Early, georgia$urbanicity, sum)
+provisional = tapply(georgia$total_provisional, georgia$urbanicity, sum)
+RSU = rbind(election, mail,early, provisional)
+rownames(RSU) = c("Election Day", "Early Vote", "Mail", "Provisional")
+chisq.test(RSU)
+```
+
 
