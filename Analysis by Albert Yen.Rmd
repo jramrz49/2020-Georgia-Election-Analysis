@@ -115,8 +115,6 @@ barplot(tapply(input$raw_vote_increase, input$urbanicity, sum)/as.vector(tapply(
 barplot(tapply(input$raw_vote_increase, input$in_atlanta_metro, sum)/as.vector(tapply(input$voted2016,input$in_atlanta_metro,sum)), col="light blue", main="Votes Cast Increase", ylim=c(0,.35),names.arg =c("Outside of Atlanta", "Atlanta") )
 
 barplot(tapply(input$raw_vote_increase, input$past_result, sum)/as.vector(tapply(input$voted2016,input$past_result,sum)), col="light blue", main="Votes Cast Increase", ylim=c(0,.35), names.arg =c("Clinton Counties", "Trump Counties") )
-
-
 ```
 #Generating Map Graphics
 
@@ -131,12 +129,12 @@ map_and_data = inner_join(mymap,input)
 map = ggplot(map_and_data)
 m=map+geom_sf(aes(fill=new_margin))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="New Margin" )+
    labs(title = "Democrat's Margin by County, 2020") +theme(title =element_text(size=18, face='bold'))
-change=map+geom_sf(aes(fill=margin_change))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="New Margin" )+
+change=map+geom_sf(aes(fill=margin_change))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="Margin Change" )+
    labs(title = "Democrat's Margin Change, 2016-2020") +theme(title =element_text(size=18, face='bold'))
 grid.arrange(m,change, ncol=2)
 ```
 
-###Share of Senior Voters
+###Share of Youth and Senior Voters
 ```{r}
 o=map+geom_sf(aes(fill=senior))+scale_fill_gradient(low= 'white',high='#FF0000', space = "Lab", name="Percentage")+
    labs(title = "Share of Electorate over 65") +theme(title =element_text(size=18, face='bold'))
@@ -158,5 +156,121 @@ a = map+geom_sf(aes(fill=AP))+scale_fill_gradient(low= 'white',high='orange', sp
 grid.arrange(w, b, a, h, ncol=2, nrow=2)
 
 ```
+###By Urbanicity
+```{r}
+map+geom_sf(aes(fill=urbanicity))+scale_fill_discrete(name="Legend")+
+   labs(title = "Urbanicity of Georgia") +theme(title =element_text(size=18, face='bold'))
+```
 
+###ANOVA of mean share of white voters by urbanicity
+#Clear difference between urban-suburban and urban-rural, slight difference between rural-suburban
+```{r}
+white_by_urbanicity <- aov(WH~urbanicity, data = input)
+summary(white_by_urbanicity)
+TukeyHSD(white_by_urbanicity)
+plot(TukeyHSD(white_by_urbanicity)) 
+```
+###Linear Regression on Biden Vote Share by Share of White Voters
+```{r}
+cor(input$BidenVoteShare,input$WH)
+plot(input$WH, input$BidenVoteShare, ylab="Biden Vote Share", xlab="Share of White Voters",
+     main="Biden Vote Share vs. Whiteness of County")
+whiteness = lm(BidenVoteShare~WH, data = input)
+abline(whiteness)
+summary(whiteness)
+plot(resid(whiteness))
+```
+
+
+###Linear Regression on Margin Changes (Statewide)
+```{r}
+#pairs(~margin_change+Education+`Median household income`, data =input)
+cor(input$margin_change,input$`Median household income`)^2
+cor(input$margin_change,input$Education)^2
+model = lm(margin_change~Education+`Median household income`, data = input)
+model_education = lm(margin_change~Education, data = input)
+model_income = lm(margin_change~`Median household income`, data = input)
+
+par(mfrow = c(1,2))
+
+plot(input$Education,input$margin_change, main = "Education vs. Margin Change ", xlab = 
+       "Percentage of Adults over 25 with College Degree", ylab = "Margin Shift")
+abline(model_education)
+plot(input$`Median household income`,input$margin_change, main = "Income vs. Margin Change", xlab = 
+       "Median Household Income", ylab = "Margin Shift")
+abline(model_income)
+#summary(model)
+
+
+model = lm(margin_change~Education, data = input)
+summary(model)
+```
+###Linear Regression on Margin Changes (Rural Counties)
+```{r}
+rural = input[input$urbanicity=="Rural",]
+cor(rural$margin_change,rural$`Median household income`)^2
+cor(rural$margin_change,rural$Education)^2
+#pairs(~margin_change+Education+`Median household income`, data =rural)
+
+rural_model = lm(margin_change~Education+`Median household income`, data = rural)
+rural_education = lm(margin_change~Education, data = rural)
+rural_income = lm(margin_change~`Median household income`, data = rural)
+
+par(mfrow = c(1,2))
+
+plot(rural$Education,rural$margin_change, main = "Education vs. Margin Change in Rural Counties", xlab = 
+       "Percentage of Adults over 25 with College Degree", ylab = "Margin Shift")
+abline(rural_education)
+plot(rural$`Median household income`,rural$margin_change, main = "Income vs. Margin Change in Rural Counties", xlab = 
+       "Median Household Income", ylab = "Margin Shift")
+abline(rural_income)
+```
+###Linear Regression on Margin Changes (Suburban and Rural Counties)
+```{r}
+non_urban = input[input$urbanicity!="Urban",]
+cor(non_urban$margin_change,non_urban$`Median household income`)^2
+cor(non_urban$margin_change,non_urban$Education)^2
+cor(non_urban$margin_change,non_urban$pop_density)^2
+#pairs(~margin_change+Education+`Median household income`, data =rural)
+
+non_urban_model = lm(margin_change~Education+`Median household income`, data = non_urban)
+non_urban_education = lm(margin_change~Education, data = non_urban)
+non_urban_income = lm(margin_change~`Median household income`, data = non_urban)
+
+par(mfrow = c(1,2))
+
+plot(non_urban$Education,non_urban$margin_change, main = "Education vs. Margin Change in Non-Urban Counties", xlab = 
+       "Percentage of Adults over 25 with College Degree", ylab = "Margin Shift")
+abline(non_urban_education)
+plot(non_urban$`Median household income`,non_urban$margin_change, main = "Income vs. Margin Change in Non-Urban Counties", xlab = 
+       "Median Household Income", ylab = "Margin Shift")
+abline(non_urban_income)
+```
+###Counties that are les than 10% Black
+```{r}
+test = input[input$BH<10,]
+#cor(test$margin_change,test$`Median household income`)^2
+cor(test$margin_change,test$Education)^2
+cor(test$margin_change,test$pop_density)^2
+length(test$County)
+
+test_model = lm(margin_change~Education+pop_density, data =test)
+test_education = lm(margin_change~Education, data = test)
+#test_income = lm(margin_change~`Median household income`, data = test)
+test_pop = lm(margin_change~pop_density, data = test)
+#summary(test_model)
+#summary(test_education)
+#summary(test_income)
+
+
+par(mfrow = c(1,2))
+
+plot(test$Education,test$margin_change, main = "Education vs. Margin Change in White Counties", xlab = 
+       "Percentage of Adults over 25 with College Degree", ylab = "Margin Shift")
+abline(test_education)
+
+plot(test$pop_density,test$margin_change, main = "Population Density vs. Margin Change in White Counties", xlab = 
+       "Population Density per Square Mile", ylab = "Margin Shift")
+abline(test_pop)
+```
 
