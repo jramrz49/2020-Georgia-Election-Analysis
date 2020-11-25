@@ -178,7 +178,12 @@ plot(input$WH, input$BidenVoteShare, ylab="Biden Vote Share", xlab="Share of Whi
 whiteness = lm(BidenVoteShare~WH, data = input)
 abline(whiteness)
 summary(whiteness)
-plot(resid(whiteness))
+plot(input$BidenVoteShare,resid(whiteness))
+qqnorm(resid(whiteness))
+qqline(resid(whiteness))
+hist(resid(whiteness))
+shapiro.test(resid(whiteness))
+confint(whiteness) 
 ```
 
 
@@ -296,5 +301,6 @@ RSU = rbind(election, mail,early, provisional)
 rownames(RSU) = c("Election Day", "Mail", "Early vote", "Provisional")
 chisq.test(RSU)
 ```
+
 
 
