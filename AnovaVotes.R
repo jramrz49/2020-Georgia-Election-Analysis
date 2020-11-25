@@ -71,7 +71,7 @@ mail= tapply(georgia$total_Mail, georgia$urbanicity, sum)
 early = tapply(georgia$total_Early, georgia$urbanicity, sum)
 provisional = tapply(georgia$total_provisional, georgia$urbanicity, sum)
 RSU = rbind(election, mail,early, provisional)
-rownames(RSU) = c("Election Day", "Early Vote", "Mail", "Provisional")
+rownames(RSU) = c("Election Day", "Mail", "Early vote", "Provisional")
 
 #Analyze this and post the results. Explain which two sets are different. Add in a total column and row when you show the table
 chisq.test(RSU)
