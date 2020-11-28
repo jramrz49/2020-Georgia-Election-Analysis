@@ -301,6 +301,41 @@ RSU = rbind(election, mail,early, provisional)
 rownames(RSU) = c("Election Day", "Mail", "Early vote", "Provisional")
 chisq.test(RSU)
 ```
+```{r}
+input = cbind(input,georgia)
+biden_ED = tapply(input$`B_Election Day Votes`, input$urbanicity, sum)
+biden_M = tapply(input$`B_Absentee by Mail Votes`, input$urbanicity, sum)
+biden_Early = tapply(input$`B_Advanced Voting Votes`, input$urbanicity, sum)
+biden_provisional = tapply(input$`B_Provisional Votes`, input$urbanicity, sum)
+biden = rbind(biden_ED, biden_M, biden_Early, biden_provisional)
+rownames(biden) = c("Election Day", "Mail", "Early vote", "Provisional")
+chisq.test(biden)
+biden=cbind(biden,rowSums(biden)) 
+biden = rbind(biden, colSums(biden))
+rownames(biden) = c("Election Day", "Mail", "Early vote", "Provisional", "Total")
+colnames(biden) = c("Rural", "Suburban", "Urban", "Total")
+biden = as.data.frame(biden)
+biden[,-4] = sapply(biden[,-5], function(x) return(round(x/biden$Total, 3)))
+biden$Total = round(biden$Total/2472022,3)
+biden
+```
+```{r}
+trump_ED = tapply(input$`T_Election Day Votes`, input$urbanicity, sum)
+trump_M = tapply(input$`T_Absentee by Mail Votes`, input$urbanicity, sum)
+trump_Early = tapply(input$`T_Advanced Voting Votes`, input$urbanicity, sum)
+trump_provisional = tapply(input$`T_Provisional Votes`, input$urbanicity, sum)
+trump = rbind(trump_ED, trump_M, trump_Early,trump_provisional)
+rownames(trump) = c("Election Day", "Mail", "Early vote", "Provisional")
+trump=cbind(trump,rowSums(trump)) 
+trump = rbind(trump, colSums(trump))
+rownames(trump) = c("Election Day", "Mail", "Early vote", "Provisional", "Total")
+colnames(trump) = c("Rural", "Suburban", "Urban", "Total")
+trump = as.data.frame(trump)
+trump[,-4] = sapply(trump[,-5], function(x) return(round(x/trump$Total, 3)))
+trump$Total = round(trump$Total/2457880,3)
+trump
+biden
+```
 
 
 
