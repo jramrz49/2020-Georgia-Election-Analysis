@@ -97,27 +97,3 @@ input = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Clea
 input[,c(24:27)] = lapply(input[,c(24:27)],as.factor)
 ```
 
-
-Hypotheses:
-1. More educated counties -> more Democratic
-2. More educated counties -> shifted more Democratic in the past 4 years
-3. Turnout increased more in White counties
-4. Higher population density -> more Democratic
-5. Higher income counties -> shifted more Democratic in the past 4 years
-6. Turnout increase higher in minority counties (<60% White)
-7. Older counties are more Republican
-#Ask Professor whether to weight the ratios
-ORGANIZATION
-Variables:
-*Education (quantitative) linear association
-Income (quantitative) significance test
-Urban/Suburban/Rural (categorical) ANOVA
-Racial breakdown linear association barplot
-Turnout (urban/suburban/rural ANOVA) histogram
-Change from 2016 
-Population Density 
-2016 result by party (categorical)
-Share of 65+ or <30
-
-
-

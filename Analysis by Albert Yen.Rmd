@@ -131,7 +131,7 @@ m=map+geom_sf(aes(fill=new_margin))+scale_fill_gradient2(midpoint = 0, low = "#F
    labs(title = "Democrat's Margin by County, 2020") +theme(title =element_text(size=18, face='bold'))
 change=map+geom_sf(aes(fill=margin_change))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="Margin Change" )+
    labs(title = "Democrat's Margin Change, 2016-2020") +theme(title =element_text(size=18, face='bold'))
-grid.arrange(m,change, ncol=2)
+#grid.arrange(m,change, ncol=2)
 ```
 
 ###Share of Youth and Senior Voters
@@ -310,13 +310,13 @@ biden_provisional = tapply(input$`B_Provisional Votes`, input$urbanicity, sum)
 biden = rbind(biden_ED, biden_M, biden_Early, biden_provisional)
 rownames(biden) = c("Election Day", "Mail", "Early vote", "Provisional")
 chisq.test(biden)
-biden=cbind(biden,rowSums(biden)) 
-biden = rbind(biden, colSums(biden))
-rownames(biden) = c("Election Day", "Mail", "Early vote", "Provisional", "Total")
-colnames(biden) = c("Rural", "Suburban", "Urban", "Total")
+#biden=cbind(biden,rowSums(biden)) 
+#biden = rbind(biden, colSums(biden))
+#rownames(biden) = c("Election Day", "Mail", "Early vote", "Provisional", "Total")
+#colnames(biden) = c("Rural", "Suburban", "Urban", "Total")
 biden = as.data.frame(biden)
-biden[,-4] = sapply(biden[,-5], function(x) return(round(x/biden$Total, 3)))
-biden$Total = round(biden$Total/2472022,3)
+#biden[,-4] = sapply(biden[,-5], function(x) return(round(x/biden$Total, 3)))
+#biden$Total = round(biden$Total/2472022,3)
 biden
 ```
 ```{r}
@@ -326,16 +326,71 @@ trump_Early = tapply(input$`T_Advanced Voting Votes`, input$urbanicity, sum)
 trump_provisional = tapply(input$`T_Provisional Votes`, input$urbanicity, sum)
 trump = rbind(trump_ED, trump_M, trump_Early,trump_provisional)
 rownames(trump) = c("Election Day", "Mail", "Early vote", "Provisional")
-trump=cbind(trump,rowSums(trump)) 
-trump = rbind(trump, colSums(trump))
-rownames(trump) = c("Election Day", "Mail", "Early vote", "Provisional", "Total")
-colnames(trump) = c("Rural", "Suburban", "Urban", "Total")
+#trump=cbind(trump,rowSums(trump)) 
+#trump = rbind(trump, colSums(trump))
+#rownames(trump) = c("Election Day", "Mail", "Early vote", "Provisional", "Total")
+#colnames(trump) = c("Rural", "Suburban", "Urban", "Total")
 trump = as.data.frame(trump)
-trump[,-4] = sapply(trump[,-5], function(x) return(round(x/trump$Total, 3)))
-trump$Total = round(trump$Total/2457880,3)
+#trump[,-4] = sapply(trump[,-5], function(x) return(round(x/trump$Total, 3)))
+#trump$Total = round(trump$Total/2457880,3)
 trump
 biden
 ```
 
+#Analyze difference between Trump/Biden Voter in different urbanicity settings
+```{r}
+urban = cbind(biden$Urban,trump$Urban)
+chisq.test(urban)
+suburban = cbind(biden$Suburban,trump$Suburban)
+chisq.test(suburban)
+rural = cbind(biden$Rural,trump$Rural)
+chisq.test(rural)
 
+```
+#Map of Voter Composition Change
+```{r}
+voter2016 = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Georgia Voter Roll 2016.xlsx", sheet = 3))
+voter2020 = input[,c(1,5:11)]
+AI_change = voter2020$AI-voter2016$AI
+HP_change = voter2020$HP-voter2016$HP
+AP_change = voter2020$AP-voter2016$AP
+WH_change = voter2020$WH-voter2016$WH
+BH_change = voter2020$BH-voter2016$BH
+OT_change = voter2020$OT-voter2016$OT
+UK_change = voter2020$UK-voter2016$UK
+voter_change = as.data.frame(cbind(input$County,AI_change, AP_change, BH_change, HP_change, WH_change, OT_change, UK_change))
+colnames(voter_change) = c("County", "AI", "AP", "BH", "HP", "WH", "OT", "UK")
+voter_change[,-1] = sapply(voter_change[,-1], as.numeric)
+voter_change[,-1] = sapply(voter_change[,-1], round,digits=2)
+```
+```{r}
+demographic_change = inner_join(mymap, voter_change)
+new_map = ggplot(demographic_change)
+```
+```{r}
+w = new_map +geom_sf(aes(fill=WH))+scale_fill_gradient2(low= '#FF0000', mid='white', high='dark green', space = "Lab", name="Percentage Change", midpoint=0)+
+   labs(title = "Change in Share of White Voters") +theme(title =element_text(size=18, face='bold'))
+b = new_map +geom_sf(aes(fill=BH))+scale_fill_gradient2(low= '#FF0000', midpoint=0, mid="white", high='#0000ff', space = "Lab", name="Percentage Change")+
+   labs(title = "Change in Share of Black Voters") +theme(title =element_text(size=18, face='bold'))
+h = new_map +geom_sf(aes(fill=HP))+scale_fill_gradient(low= 'white',high='green', space = "Lab", name="Percentage Change")+
+   labs(title = "Change in Share of Hispanic Voters") +theme(title =element_text(size=18, face='bold'))
+a = new_map +geom_sf(aes(fill=AP))+scale_fill_gradient(low= 'white',high='orange', space = "Lab", name="Percentage Change")+
+   labs(title = "Change in Share of Asian Voters") +theme(title =element_text(size=18, face='bold'))
+
+unknown = new_map +geom_sf(aes(fill=UK))+scale_fill_gradient2(low= '#FF0000', mid='white', high='#0000ff', space = "Lab", name="Percentage Change", midpoint=0)+
+   labs(title = "Change in Race Unknown") +theme(title =element_text(size=18, face='bold'))
+
+others = new_map +geom_sf(aes(fill=OT))+scale_fill_gradient2(low= '#FF0000', mid='white', high='#0000ff', space = "Lab", name="Percentage Change", midpoint=0)+
+   labs(title = "Change in Other Races") +theme(title =element_text(size=18, face='bold'))
+#grid.arrange(w, b, a, h, ncol=2, nrow=2)
+#grid.arrange(w, b, a, h, unknown, others, ncol=2, nrow=3)
+#grid.arrange(w, b, a, h, unknown, others, ncol=3, nrow=2)
+```
+```{r}
+input$WH_change = voter_change$WH
+w = new_map +geom_sf(aes(fill=WH))+scale_fill_gradient2(low= '#0000ff', mid='white', high='#FF0000', space = "Lab", name="Percentage Change", midpoint=0)+
+   labs(title = "Change in Share of White Voters, 2016-2020") +theme(title =element_text(size=18, face='bold'))
+#plot(input$WH_change,input$margin_change)
+#grid.arrange(w, change,  nrow=2)
+```
 
