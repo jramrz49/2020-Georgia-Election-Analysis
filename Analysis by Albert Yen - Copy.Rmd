@@ -1,0 +1,396 @@
+---
+title: "Albert Yen Analysis"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+
+Loading Libraries and Data
+```{r}
+library(sf)
+library(ggplot2)
+library(tmap)
+library(tmaptools)
+library(leaflet)
+library(dplyr)
+options(scipen = 999)
+library(readxl)
+library(gridExtra)
+input = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Cleaned_Data.xlsx"))
+input[,c(24:27)] = lapply(input[,c(24:27)],as.factor)
+```
+
+#Exploratory Analysis
+
+###Vote Share by urbanicity and Atlanta
+```{r}
+Total = tapply(input$Total_votes, input$urbanicity,sum)
+B_vote = tapply(input$Total_votes*input$BidenVoteShare/100, input$urbanicity,sum)
+#urbanicity = c("Rural","Suburban", "Urban")
+voters = tapply(input$`TOTAL VOTERS`, input$urbanicity,sum)
+par(mfrow = c(2,2))
+
+barplot(B_vote/Total, col="light blue", main = "Biden's Vote Share",ylim=c(0,0.8))
+barplot(voters/sum(voters), col="light blue", main = "Share of Registered Voters", ylim=c(0,0.5))
+
+B_atlanta_votes = tapply(input$Total_votes*input$BidenVoteShare/100, input$in_atlanta_metro,sum)
+atlanta_voters = tapply(input$`TOTAL VOTERS`, input$in_atlanta_metro,sum)
+atlanta_voted = tapply(input$Total_votes, input$in_atlanta_metro,sum)
+
+barplot(B_atlanta_votes/atlanta_voted, col="light blue", main = "Biden's Vote Share", names.arg =c( "Outside of Atlanta", "Atlanta"), ylim=c(0,0.7))
+barplot(atlanta_voted/sum(atlanta_voted), col="light blue", names.arg =c("Outside of Atlanta", "Atlanta"), main = "Share of Registered Voters", ylim=c(0,0.6))
+```
+###Margin Increases by Urbanicity and Atlanta Metro
+```{r}
+votes2016 = tapply(input$Total_votes*(100-input$voteChange)/100, input$urbanicity,sum)
+new_margin = tapply(input$new_margin*input$Total_votes/100, input$urbanicity, sum)/Total
+old_margin = tapply(input$old_margin*input$Total_votes*(100-input$voteChange)/100/100, input$urbanicity, sum)/votes2016
+
+par(mfrow = c(1,2))
+barplot(new_margin-old_margin,ylim=c(-0.05,0.1), main="Change in Margin of Victory", col="light blue")
+
+atlanta_votes2016 = tapply(input$Total_votes*(100-input$voteChange)/100, input$in_atlanta_metro,sum)
+atlanta_new_margin = tapply(input$new_margin*input$Total_votes/100, input$in_atlanta_metro, sum)/atlanta_voted
+atlanta_old_margin = tapply(input$old_margin*input$Total_votes*(100-input$voteChange)/100/100, input$in_atlanta_metro, sum)/atlanta_votes2016
+barplot(atlanta_new_margin-atlanta_old_margin,ylim=c(0,0.1), main="Change in Margin of Victory", col="light blue", names.arg =c("Outside of Atlanta", "Atlanta"))
+```
+###Democrat's margin increase by urbanicity, Atlanta, and 2016 results
+```{r}
+winner2016_2016voted = tapply(input$Total_votes*(100-input$voteChange)/100, input$past_result,sum)
+winner2016_voted = tapply(input$Total_votes, input$past_result,sum)
+winner2016_voter = tapply(input$`TOTAL VOTERS`, input$past_result,sum)
+winner2016_new_margin = tapply(input$new_margin*input$Total_votes/100, input$past_result, sum)/winner2016_voted
+winner2016_old_margin = tapply(input$old_margin*input$Total_votes*(100-input$voteChange)/100/100, input$past_result, sum)/winner2016_2016voted
+
+par(mfrow = c(2,2))
+barplot(new_margin-old_margin,ylim=c(-0.05,0.1), main="Change in Margin of Victory", col="light blue")
+barplot(atlanta_new_margin-atlanta_old_margin,ylim=c(0,0.1), main="Change in Margin of Victory", col="light blue", names.arg =c("Outside of Atlanta", "Atlanta"))
+barplot(winner2016_new_margin-winner2016_old_margin,ylim=c(0,0.1), main="Change in Margin of Victory", col="light blue", names.arg = c("Clinton Counties", "Trump Counties"))
+```
+
+
+###Turnout by by urbanicity, Atlanta, and 2016 results
+```{r}
+par(mfrow = c(2,2))
+turnout = sum(Total)/sum(voters)
+barplot(Total/voters, col="light blue", main = "Turnout",
+        width = c(0.1,0.1,0.1))
+barplot(atlanta_voted/atlanta_voters,main = "Turnout", col="light blue", ylim=c(0,0.7), names.arg =c("Outside of Atlanta", "Atlanta"))
+barplot(winner2016_voted/winner2016_voter,main = "Turnout", col="light blue", ylim=c(0,0.7), names.arg =c("Clinton Counties", "Trump Counties"))
+```
+###Voter turnout Increases by urbanicity, Atlanta, and 2016 results
+```{r}
+winner2016_2016total_voters = tapply(input$Total_votes*(100-input$voteChange)/100/(input$Turnout-input$TurnoutChange)*100, input$past_result,sum)
+
+atlanta_2016total_voters = tapply(input$Total_votes*(100-input$voteChange)/100/(input$Turnout-input$TurnoutChange)*100, input$in_atlanta_metro,sum)
+
+total_voters2016 = tapply(input$Total_votes*(100-input$voteChange)/100/(input$Turnout-input$TurnoutChange)*100, input$urbanicity,sum)
+
+winner2016_2016turnout = winner2016_2016voted/winner2016_2016total_voters 
+winner2016_turnout = winner2016_voted/winner2016_voter
+
+turnout2016 = votes2016/total_voters2016
+increase = Total/voters-turnout2016
+
+atlanta_turnout2016 = atlanta_votes2016/atlanta_2016total_voters
+atlanta_turnout_increase = atlanta_voted/atlanta_voters - atlanta_turnout2016
+
+par(mfrow = c(2,2))
+barplot(increase,main = "Turnout Increase", col="light blue", ylim=c(0,0.08))
+
+barplot(winner2016_turnout-winner2016_2016turnout,main = "Turnout Increase", col="light blue", ylim=c(0,0.08), names.arg =c("Clinton Counties", "Trump Counties"))
+
+barplot(atlanta_turnout_increase,main = "Turnout Increase", col="light blue", ylim=c(0,0.08), names.arg =c("Outside of Atlanta", "Atlanta"))
+```
+###Change in total number of votes cast by urbanicity, Atlanta, and 2016 results
+```{r}
+input$voted2016 = round(input$Total_votes*(100-input$voteChange)/100)
+input$raw_vote_increase = input$Total_votes-input$voted2016
+
+par(mfrow = c(2,2))
+
+barplot(tapply(input$raw_vote_increase, input$urbanicity, sum)/as.vector(tapply(input$voted2016,input$urbanicity,sum)), col="light blue", main="Votes Cast Increase", ylim=c(0,.35))
+
+barplot(tapply(input$raw_vote_increase, input$in_atlanta_metro, sum)/as.vector(tapply(input$voted2016,input$in_atlanta_metro,sum)), col="light blue", main="Votes Cast Increase", ylim=c(0,.35),names.arg =c("Outside of Atlanta", "Atlanta") )
+
+barplot(tapply(input$raw_vote_increase, input$past_result, sum)/as.vector(tapply(input$voted2016,input$past_result,sum)), col="light blue", main="Votes Cast Increase", ylim=c(0,.35), names.arg =c("Clinton Counties", "Trump Counties") )
+```
+#Generating Map Graphics
+
+###read in map data
+```{r}
+mymap <- st_read("C:/Users/alber/Downloads/Stat382/Project4/georgia/Georgia_Counties.shp", stringsAsFactors=F)
+names(mymap)[names(mymap)=="Name"] ="County"
+map_and_data = inner_join(mymap,input)
+```
+###By Margin
+```{r}
+map = ggplot(map_and_data)
+m=map+geom_sf(aes(fill=new_margin))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="New Margin" )+
+   labs(title = "Democrat's Margin by County, 2020") +theme(title =element_text(size=18, face='bold'))
+change=map+geom_sf(aes(fill=margin_change))+scale_fill_gradient2(midpoint = 0, low = "#FF0000", mid = "white", high = "#0000ff", space = "Lab", name="Margin Change" )+
+   labs(title = "Democrat's Margin Change, 2016-2020") +theme(title =element_text(size=18, face='bold'))
+#grid.arrange(m,change, ncol=2)
+```
+
+###Share of Youth and Senior Voters
+```{r}
+o=map+geom_sf(aes(fill=senior))+scale_fill_gradient(low= 'white',high='#FF0000', space = "Lab", name="Percentage")+
+   labs(title = "Share of Electorate over 65") +theme(title =element_text(size=18, face='bold'))
+y=map+geom_sf(aes(fill=youth))+scale_fill_gradient(low= 'white',high='#0000ff', space = "Lab", name="Percentage")+
+   labs(title = "Share of Electorate under 30") +theme(title =element_text(size=18, face='bold'))
+grid.arrange(y,o, ncol=2)
+```
+
+###Demographic Overview
+```{r}
+w = map+geom_sf(aes(fill=WH))+scale_fill_gradient(low= 'white',high='#FF0000', space = "Lab", name="Percentage")+
+   labs(title = "Share of White Voters") +theme(title =element_text(size=18, face='bold'))
+b = map+geom_sf(aes(fill=BH))+scale_fill_gradient(low= 'white',high='#0000ff', space = "Lab", name="Percentage")+
+   labs(title = "Share of Black Voters") +theme(title =element_text(size=18, face='bold'))
+h = map+geom_sf(aes(fill=HP))+scale_fill_gradient(low= 'white',high='green', space = "Lab", name="Percentage")+
+   labs(title = "Share of Hispanic Voters") +theme(title =element_text(size=18, face='bold'))
+a = map+geom_sf(aes(fill=AP))+scale_fill_gradient(low= 'white',high='orange', space = "Lab", name="Percentage")+
+   labs(title = "Share of Asian Voters") +theme(title =element_text(size=18, face='bold'))
+grid.arrange(w, b, a, h, ncol=2, nrow=2)
+
+```
+###By Urbanicity
+```{r}
+map+geom_sf(aes(fill=urbanicity))+scale_fill_discrete(name="Legend")+
+   labs(title = "Urbanicity of Georgia") +theme(title =element_text(size=18, face='bold'))
+```
+
+###ANOVA of mean share of white voters by urbanicity
+#Clear difference between urban-suburban and urban-rural, slight difference between rural-suburban
+```{r}
+white_by_urbanicity <- aov(WH~urbanicity, data = input)
+summary(white_by_urbanicity)
+TukeyHSD(white_by_urbanicity)
+plot(TukeyHSD(white_by_urbanicity)) 
+```
+###Linear Regression on Biden Vote Share by Share of White Voters
+```{r}
+cor(input$BidenVoteShare,input$WH)
+plot(input$WH, input$BidenVoteShare, ylab="Biden Vote Share", xlab="Share of White Voters",
+     main="Biden Vote Share vs. Whiteness of County")
+whiteness = lm(BidenVoteShare~WH, data = input)
+abline(whiteness)
+summary(whiteness)
+plot(input$BidenVoteShare,resid(whiteness))
+qqnorm(resid(whiteness))
+qqline(resid(whiteness))
+hist(resid(whiteness))
+shapiro.test(resid(whiteness))
+confint(whiteness) 
+```
+
+
+###Linear Regression on Margin Changes (Statewide)
+```{r}
+#pairs(~margin_change+Education+`Median household income`, data =input)
+cor(input$margin_change,input$`Median household income`)^2
+cor(input$margin_change,input$Education)^2
+model = lm(margin_change~Education+`Median household income`, data = input)
+model_education = lm(margin_change~Education, data = input)
+model_income = lm(margin_change~`Median household income`, data = input)
+
+par(mfrow = c(1,2))
+
+plot(input$Education,input$margin_change, main = "Education vs. Margin Change ", xlab = 
+       "Percentage of Adults over 25 with College Degree", ylab = "Margin Shift")
+abline(model_education)
+plot(input$`Median household income`,input$margin_change, main = "Income vs. Margin Change", xlab = 
+       "Median Household Income", ylab = "Margin Shift")
+abline(model_income)
+#summary(model)
+
+
+model = lm(margin_change~Education, data = input)
+summary(model)
+```
+###Linear Regression on Margin Changes (Rural Counties)
+```{r}
+rural = input[input$urbanicity=="Rural",]
+cor(rural$margin_change,rural$`Median household income`)^2
+cor(rural$margin_change,rural$Education)^2
+#pairs(~margin_change+Education+`Median household income`, data =rural)
+
+rural_model = lm(margin_change~Education+`Median household income`, data = rural)
+rural_education = lm(margin_change~Education, data = rural)
+rural_income = lm(margin_change~`Median household income`, data = rural)
+
+par(mfrow = c(1,2))
+
+plot(rural$Education,rural$margin_change, main = "Education vs. Margin Change in Rural Counties", xlab = 
+       "Percentage of Adults over 25 with College Degree", ylab = "Margin Shift")
+abline(rural_education)
+plot(rural$`Median household income`,rural$margin_change, main = "Income vs. Margin Change in Rural Counties", xlab = 
+       "Median Household Income", ylab = "Margin Shift")
+abline(rural_income)
+```
+###Linear Regression on Margin Changes (Suburban and Rural Counties)
+```{r}
+non_urban = input[input$urbanicity!="Urban",]
+cor(non_urban$margin_change,non_urban$`Median household income`)^2
+cor(non_urban$margin_change,non_urban$Education)^2
+cor(non_urban$margin_change,non_urban$pop_density)^2
+#pairs(~margin_change+Education+`Median household income`, data =rural)
+
+non_urban_model = lm(margin_change~Education+`Median household income`, data = non_urban)
+non_urban_education = lm(margin_change~Education, data = non_urban)
+non_urban_income = lm(margin_change~`Median household income`, data = non_urban)
+
+par(mfrow = c(1,2))
+
+plot(non_urban$Education,non_urban$margin_change, main = "Education vs. Margin Change in Non-Urban Counties", xlab = 
+       "Percentage of Adults over 25 with College Degree", ylab = "Margin Shift")
+abline(non_urban_education)
+plot(non_urban$`Median household income`,non_urban$margin_change, main = "Income vs. Margin Change in Non-Urban Counties", xlab = 
+       "Median Household Income", ylab = "Margin Shift")
+abline(non_urban_income)
+```
+###Counties that are les than 10% Black
+```{r}
+test = input[input$BH<10,]
+#cor(test$margin_change,test$`Median household income`)^2
+cor(test$margin_change,test$Education)^2
+cor(test$margin_change,test$pop_density)^2
+length(test$County)
+
+test_model = lm(margin_change~Education+pop_density, data =test)
+test_education = lm(margin_change~Education, data = test)
+#test_income = lm(margin_change~`Median household income`, data = test)
+test_pop = lm(margin_change~pop_density, data = test)
+#summary(test_model)
+#summary(test_education)
+#summary(test_income)
+
+
+par(mfrow = c(1,2))
+
+plot(test$Education,test$margin_change, main = "Education vs. Margin Change in White Counties", xlab = 
+       "Percentage of Adults over 25 with College Degree", ylab = "Margin Shift")
+abline(test_education)
+
+plot(test$pop_density,test$margin_change, main = "Population Density vs. Margin Change in White Counties", xlab = 
+       "Population Density per Square Mile", ylab = "Margin Shift")
+abline(test_pop)
+```
+Analysis of Vote Breakdowns
+```{r}
+georgia = as.data.frame(read_excel('C:/Users/alber/Downloads/Stat382/Project4/Georgia.xlsx'))[-160,]
+Biden_breakdown = c(sum(georgia$`B_Election Day Votes`),sum(georgia$`B_Advanced Voting Votes`),sum(georgia$`B_Absentee by Mail Votes`),sum(georgia$`B_Provisional Votes`))
+Trump_breakdown = c(sum(georgia$`T_Election Day Votes`),sum(georgia$`T_Advanced Voting Votes`),sum(georgia$`T_Absentee by Mail Votes`),sum(georgia$`T_Provisional Votes`))
+breakdown = cbind(Biden_breakdown,Trump_breakdown)
+rownames(breakdown) = c("Election Day", "Early Vote", "Mail", "Provisional")
+colnames(breakdown) = c("Biden", "Trump")
+chisq.test(breakdown)
+
+georgia$urbanicity = input$urbanicity
+georgia$total_ElectionDay = rowSums(georgia[,c(2,7,12)])
+georgia$total_Mail = rowSums(georgia[,c(3,8,13)])
+georgia$total_Early = rowSums(georgia[,c(4,9,14)])
+georgia$total_provisional = rowSums(georgia[,c(5,10,15)])
+election = tapply(georgia$total_ElectionDay, georgia$urbanicity, sum)
+mail= tapply(georgia$total_Mail, georgia$urbanicity, sum)
+early = tapply(georgia$total_Early, georgia$urbanicity, sum)
+provisional = tapply(georgia$total_provisional, georgia$urbanicity, sum)
+RSU = rbind(election, mail,early, provisional)
+rownames(RSU) = c("Election Day", "Mail", "Early vote", "Provisional")
+chisq.test(RSU)
+```
+```{r}
+input = cbind(input,georgia)
+biden_ED = tapply(input$`B_Election Day Votes`, input$urbanicity, sum)
+biden_M = tapply(input$`B_Absentee by Mail Votes`, input$urbanicity, sum)
+biden_Early = tapply(input$`B_Advanced Voting Votes`, input$urbanicity, sum)
+biden_provisional = tapply(input$`B_Provisional Votes`, input$urbanicity, sum)
+biden = rbind(biden_ED, biden_M, biden_Early, biden_provisional)
+rownames(biden) = c("Election Day", "Mail", "Early vote", "Provisional")
+chisq.test(biden)
+#biden=cbind(biden,rowSums(biden)) 
+#biden = rbind(biden, colSums(biden))
+#rownames(biden) = c("Election Day", "Mail", "Early vote", "Provisional", "Total")
+#colnames(biden) = c("Rural", "Suburban", "Urban", "Total")
+biden = as.data.frame(biden)
+#biden[,-4] = sapply(biden[,-5], function(x) return(round(x/biden$Total, 3)))
+#biden$Total = round(biden$Total/2472022,3)
+biden
+```
+```{r}
+trump_ED = tapply(input$`T_Election Day Votes`, input$urbanicity, sum)
+trump_M = tapply(input$`T_Absentee by Mail Votes`, input$urbanicity, sum)
+trump_Early = tapply(input$`T_Advanced Voting Votes`, input$urbanicity, sum)
+trump_provisional = tapply(input$`T_Provisional Votes`, input$urbanicity, sum)
+trump = rbind(trump_ED, trump_M, trump_Early,trump_provisional)
+rownames(trump) = c("Election Day", "Mail", "Early vote", "Provisional")
+#trump=cbind(trump,rowSums(trump)) 
+#trump = rbind(trump, colSums(trump))
+#rownames(trump) = c("Election Day", "Mail", "Early vote", "Provisional", "Total")
+#colnames(trump) = c("Rural", "Suburban", "Urban", "Total")
+trump = as.data.frame(trump)
+#trump[,-4] = sapply(trump[,-5], function(x) return(round(x/trump$Total, 3)))
+#trump$Total = round(trump$Total/2457880,3)
+trump
+biden
+```
+
+#Analyze difference between Trump/Biden Voter in different urbanicity settings
+```{r}
+urban = cbind(biden$Urban,trump$Urban)
+chisq.test(urban)
+suburban = cbind(biden$Suburban,trump$Suburban)
+chisq.test(suburban)
+rural = cbind(biden$Rural,trump$Rural)
+chisq.test(rural)
+
+```
+#Map of Voter Composition Change
+```{r}
+voter2016 = as.data.frame(read_excel("C:/Users/alber/Downloads/Stat382/Project4/Georgia Voter Roll 2016.xlsx", sheet = 3))
+voter2020 = input[,c(1,5:11)]
+AI_change = voter2020$AI-voter2016$AI
+HP_change = voter2020$HP-voter2016$HP
+AP_change = voter2020$AP-voter2016$AP
+WH_change = voter2020$WH-voter2016$WH
+BH_change = voter2020$BH-voter2016$BH
+OT_change = voter2020$OT-voter2016$OT
+UK_change = voter2020$UK-voter2016$UK
+voter_change = as.data.frame(cbind(input$County,AI_change, AP_change, BH_change, HP_change, WH_change, OT_change, UK_change))
+colnames(voter_change) = c("County", "AI", "AP", "BH", "HP", "WH", "OT", "UK")
+voter_change[,-1] = sapply(voter_change[,-1], as.numeric)
+voter_change[,-1] = sapply(voter_change[,-1], round,digits=2)
+```
+```{r}
+demographic_change = inner_join(mymap, voter_change)
+new_map = ggplot(demographic_change)
+```
+```{r}
+w = new_map +geom_sf(aes(fill=WH))+scale_fill_gradient2(low= '#FF0000', mid='white', high='dark green', space = "Lab", name="Percentage Change", midpoint=0)+
+   labs(title = "Change in Share of White Voters") +theme(title =element_text(size=18, face='bold'))
+b = new_map +geom_sf(aes(fill=BH))+scale_fill_gradient2(low= '#FF0000', midpoint=0, mid="white", high='#0000ff', space = "Lab", name="Percentage Change")+
+   labs(title = "Change in Share of Black Voters") +theme(title =element_text(size=18, face='bold'))
+h = new_map +geom_sf(aes(fill=HP))+scale_fill_gradient(low= 'white',high='green', space = "Lab", name="Percentage Change")+
+   labs(title = "Change in Share of Hispanic Voters") +theme(title =element_text(size=18, face='bold'))
+a = new_map +geom_sf(aes(fill=AP))+scale_fill_gradient(low= 'white',high='orange', space = "Lab", name="Percentage Change")+
+   labs(title = "Change in Share of Asian Voters") +theme(title =element_text(size=18, face='bold'))
+
+unknown = new_map +geom_sf(aes(fill=UK))+scale_fill_gradient2(low= '#FF0000', mid='white', high='#0000ff', space = "Lab", name="Percentage Change", midpoint=0)+
+   labs(title = "Change in Race Unknown") +theme(title =element_text(size=18, face='bold'))
+
+others = new_map +geom_sf(aes(fill=OT))+scale_fill_gradient2(low= '#FF0000', mid='white', high='#0000ff', space = "Lab", name="Percentage Change", midpoint=0)+
+   labs(title = "Change in Other Races") +theme(title =element_text(size=18, face='bold'))
+#grid.arrange(w, b, a, h, ncol=2, nrow=2)
+#grid.arrange(w, b, a, h, unknown, others, ncol=2, nrow=3)
+#grid.arrange(w, b, a, h, unknown, others, ncol=3, nrow=2)
+```
+```{r}
+input$WH_change = voter_change$WH
+w = new_map +geom_sf(aes(fill=WH))+scale_fill_gradient2(low= '#0000ff', mid='white', high='#FF0000', space = "Lab", name="Percentage Change", midpoint=0)+
+   labs(title = "Change in Share of White Voters, 2016-2020") +theme(title =element_text(size=18, face='bold'))
+#plot(input$WH_change,input$margin_change)
+#grid.arrange(w, change,  nrow=2)
+```
+
