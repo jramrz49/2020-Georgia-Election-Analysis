@@ -367,6 +367,7 @@ voter_change[,-1] = sapply(voter_change[,-1], round,digits=2)
 demographic_change = inner_join(mymap, voter_change)
 new_map = ggplot(demographic_change)
 ```
+#Map of racial demographic changes between 2016-2020
 ```{r}
 w = new_map +geom_sf(aes(fill=WH))+scale_fill_gradient2(low= '#FF0000', mid='white', high='dark green', space = "Lab", name="Percentage Change", midpoint=0)+
    labs(title = "Change in Share of White Voters") +theme(title =element_text(size=18, face='bold'))
